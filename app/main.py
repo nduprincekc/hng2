@@ -4,6 +4,8 @@ from fastapi.responses import JSONResponse
 from app.database import engine
 from app import models
 from app.routers import profiles
+import subprocess
+import sys
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -23,6 +25,14 @@ async def add_cors_header(request: Request, call_next):
     return response
 
 app.include_router(profiles.router, prefix="/api")
+
+@app.on_event("startup")
+async def startup_event():
+    try:
+        from seed import seed
+        seed()
+    except Exception as e:
+        print(f"Seeding skipped: {e}")
 
 @app.get("/")
 def root():
